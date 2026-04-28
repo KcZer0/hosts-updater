@@ -11,12 +11,14 @@ where !_COMPRESS! 2>nul >nul || (
 set "_CACHE=%~dp0\cache"
 if not exist "!_CACHE!\backup\*" mkdir !_CACHE!\backup
 
-set _SHOST="%SYSTEMROOT%\System32\drivers\etc\hosts"
-set _CHOST="!_CACHE!\hosts"
+set "_SDIR=%SYSTEMROOT%\System32\drivers\etc"
+set _SHOST="!_SDIR!\hosts"
+set "_CDIR=!_CACHE!"
+set _CHOST="!_CDIR!\hosts"
 
 :: Copy hosts
-copy !_SHOST! !_CHOST! /y >nul
-pwsh -c "$d = (date).toString('yyyy-MM-dd_HHmmss'); copy !_CHOST! !_CACHE!\backup\hosts-$d"
+robocopy /copy:dt /is /it !_SDIR! !_CDIR! hosts >nul
+attrib -R "!_CHOST!"
 
 :: Download Files
 set "_SBH=!_CACHE!\unified.txt"
@@ -37,6 +39,9 @@ if "!_OLDDATE!" == "!_NEWDATE!" (
 )
 echo. Updating Hosts...
 
+:: Backup
+pwsh -c "$d = (date).toString('yyyy-MM-dd_HHmmss'); xcopy /-i /y !_CHOST! !_CACHE!\backup\hosts-$d >$null"
+
 :: Compress
 set "_FULL=!_CACHE!\full.txt"
 set "_COMP=!_CACHE!\compress.txt"
@@ -55,7 +60,7 @@ timeout /t 1 /nobreak > nul
 attrib -R "!_SHOST!"
 
 timeout /t 2 /nobreak > nul
-copy "!_CHOST!" "!_SHOST!" /y >nul
+robocopy /copy:dt /is /it !_CDIR! !_SDIR! hosts >nul
 
 timeout /t 1 /nobreak > nul
 attrib +R "!_SHOST!"
